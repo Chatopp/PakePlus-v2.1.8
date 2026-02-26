@@ -1,11 +1,1352 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        Hello World
-    </body>
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>物流经营台账</title>
+    <link rel="stylesheet" href="./styles.css?v=20260222-19" />
+  </head>
+  <body>
+    <div class="bg-pattern"></div>
+
+    <main class="container">
+      <header class="hero card reveal">
+        <div class="hero-main">
+          <img class="hero-logo" src="./assets/logistics-icon.svg" alt="顺源物流图标" />
+          <p class="hero-app-name">顺源物流管理系统</p>
+          <span id="storage-mode-badge" class="storage-mode-badge" aria-live="polite"></span>
+        </div>
+        <div class="hero-tools">
+          <label class="global-search" aria-label="全局搜索">
+            <span class="search-icon">🔍</span>
+            <input id="global-search-input" type="search" placeholder="搜索运单号..." />
+          </label>
+          <button class="icon-btn" type="button" aria-label="消息提醒">🔔</button>
+          <span class="shortcut-hint">快捷键 Alt+1/2/3/4/5 切换 · / 搜索</span>
+          <time id="current-time" aria-live="polite"></time>
+        </div>
+      </header>
+
+      <div class="content-layout">
+        <aside class="sidebar card reveal delay-1" aria-label="左侧功能栏">
+          <nav class="sidebar-nav" aria-label="功能导航">
+            <button
+              type="button"
+              class="nav-btn is-active"
+              data-open-panel="shipment-panel"
+              aria-current="true"
+            >
+              <span class="nav-icon">收</span>
+              <span>收发管理</span>
+            </button>
+            <button type="button" class="nav-btn" data-open-panel="dispatch-panel">
+              <span class="nav-icon">配</span>
+              <span>货物配车</span>
+            </button>
+            <button type="button" class="nav-btn" data-open-panel="status-panel">
+              <span class="nav-icon">态</span>
+              <span>家结状态</span>
+            </button>
+            <button type="button" class="nav-btn" data-open-panel="finance-panel">
+              <span class="nav-icon">支</span>
+              <span>收支管理</span>
+            </button>
+            <button type="button" class="nav-btn" data-open-panel="daily-summary-panel">
+              <span class="nav-icon">汇</span>
+              <span>日常汇总</span>
+            </button>
+          </nav>
+        </aside>
+
+        <div class="panel-stack">
+        <section
+          id="shipment-panel"
+          class="panel card reveal delay-1"
+          data-panel
+          aria-labelledby="shipment-title"
+        >
+          <div class="panel-head">
+            <div class="panel-title">
+              <h2 id="shipment-title">收发货统计台账</h2>
+              <p>管理和跟踪所有入库及出库物流数据。</p>
+            </div>
+            <div class="panel-head-actions">
+              <div class="panel-head-entry-action">
+                <button type="button" class="level-back-btn panel-top-back-btn shipment-import-btn" id="shipment-batch-import-btn">
+                  批量导入Excel
+                </button>
+                <button type="button" class="level-back-btn panel-top-back-btn shipment-sync-btn" id="storage-export-package-btn">
+                  手动保存数据包
+                </button>
+                <button type="button" class="level-back-btn panel-top-back-btn shipment-sync-btn" id="storage-import-package-btn">
+                  手动读取数据包
+                </button>
+                <input
+                  id="shipment-batch-import-file"
+                  class="hidden-file-input"
+                  type="file"
+                  accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                />
+                <input
+                  id="storage-import-package-file"
+                  class="hidden-file-input"
+                  type="file"
+                  accept=".json,application/json"
+                />
+                <button type="button" class="open-summary-view-btn" data-open-summary-view>进入汇总区</button>
+              </div>
+              <div class="panel-head-summary-action">
+                <button type="button" class="level-back-btn panel-top-back-btn" data-close-summary-view>
+                  返回功能区
+                </button>
+                <button type="button" class="level-back-btn panel-top-back-btn" id="shipment-export-filtered-summary">
+                  导出勾选
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <div class="work-grid is-function-view" data-summary-layout>
+              <section class="function-zone" aria-label="收发功能区">
+                <h3 class="zone-title">功能区</h3>
+
+                <form id="shipment-form" class="waybill-form">
+                  <div class="waybill-sheet">
+                    <div class="waybill-header">
+                      <h4>货物运输合同 / 结算单录入</h4>
+                      <p>按发车清单字段登记，便于对账与日常查询。</p>
+                    </div>
+                    <div class="waybill-grid">
+                      <label>
+                        序号
+                        <input name="serialNo" type="text" maxlength="30" placeholder="如 001 或 2409058" />
+                      </label>
+                      <label>
+                        日期
+                        <input name="date" type="date" required />
+                      </label>
+                      <label>
+                        厂家
+                        <input
+                          name="manufacturer"
+                          type="text"
+                          maxlength="60"
+                          list="shipment-manufacturer-list"
+                          autocomplete="off"
+                          placeholder="如 顺源饮品厂"
+                        />
+                      </label>
+                      <label class="span-2">
+                        客户
+                        <input
+                          name="customer"
+                          type="text"
+                          maxlength="80"
+                          list="shipment-customer-list"
+                          autocomplete="off"
+                          placeholder="如 李兰水韵门店"
+                        />
+                      </label>
+                      <label class="span-2">
+                        产品
+                        <input
+                          name="product"
+                          type="text"
+                          maxlength="80"
+                          list="shipment-product-list"
+                          autocomplete="off"
+                          placeholder="输入产品自动匹配单价/历史记录"
+                        />
+                        <div
+                          id="shipment-product-suggestion-panel"
+                          class="product-suggestion-panel is-hidden"
+                          role="listbox"
+                          aria-label="产品匹配建议"
+                        ></div>
+                      </label>
+                      <label>
+                        单位重量（KG）
+                        <input name="weight" type="number" min="0" step="0.001" placeholder="如 0.012" />
+                      </label>
+                      <label>
+                        单位立方（m3）
+                        <input name="cubic" type="number" min="0" step="0.001" placeholder="如 0.015" />
+                      </label>
+
+                      <label>
+                        计量单位
+                        <select name="measureUnit">
+                          <option value="piece">件</option>
+                          <option value="ton">KG</option>
+                          <option value="cubic">平方</option>
+                        </select>
+                      </label>
+                      <label>
+                        <span id="shipment-quantity-label">计量值(件)</span>
+                        <input
+                          name="quantity"
+                          type="number"
+                          min="0"
+                          step="0.001"
+                          required
+                          placeholder="按计量值填写（精确到0.001）"
+                        />
+                      </label>
+                      <label>
+                        单价(元)
+                        <input name="unitPrice" type="number" min="0" step="0.01" placeholder="可留空，默认 0" />
+                      </label>
+                      <label>
+                        金额(元)
+                        <input name="amount" type="number" min="0" step="0.01" placeholder="留空则自动=计量值×单价" />
+                      </label>
+                      <label>
+                        回扣(元)（选填）
+                        <input name="rebate" type="number" min="0" step="0.01" placeholder="可留空，默认 0" />
+                      </label>
+
+                      <label>
+                        中转（选填）
+                        <input name="transit" type="text" maxlength="50" placeholder="如 直达 / 郑州中转" />
+                      </label>
+                      <label>
+                        送货（选填）
+                        <input name="delivery" type="text" maxlength="50" placeholder="如 送货到店 / 否" />
+                      </label>
+                      <label>
+                        提货（选填）
+                        <input name="pickup" type="text" maxlength="50" placeholder="如 自提 / 代提" />
+                      </label>
+
+                      <label class="span-4 shipment-note-group">
+                        备注（勾选）
+                        <div class="shipment-note-options" role="group" aria-label="备注快捷勾选">
+                          <label class="shipment-note-option">
+                            <input type="checkbox" data-shipment-note-option value="家结" />
+                            <span class="shipment-note-option-text">家结</span>
+                          </label>
+                          <label class="shipment-note-option">
+                            <input type="checkbox" data-shipment-note-option value="提付" />
+                            <span class="shipment-note-option-text">提付</span>
+                          </label>
+                          <label class="shipment-note-option">
+                            <input type="checkbox" data-shipment-note-option value="运费已付" />
+                            <span class="shipment-note-option-text">运费已付</span>
+                          </label>
+                          <label class="shipment-note-option">
+                            <input type="checkbox" data-shipment-note-option value="现付" />
+                            <span class="shipment-note-option-text">现付</span>
+                          </label>
+                        </div>
+                        <input
+                          id="shipment-note-custom"
+                          type="text"
+                          maxlength="120"
+                          placeholder="其他备注（选填）"
+                        />
+                        <input id="shipment-note-hidden" name="note" type="hidden" />
+                      </label>
+                    </div>
+                  </div>
+                  <datalist id="shipment-manufacturer-list"></datalist>
+                  <datalist id="shipment-customer-list"></datalist>
+                  <datalist id="shipment-product-list"></datalist>
+                  <button class="primary-btn full" type="submit">保存发车记录</button>
+                </form>
+              </section>
+
+              <section class="display-zone" aria-label="收发显示区">
+                <div class="zone-head">
+                  <h3 class="zone-title">汇总区</h3>
+                </div>
+                <div class="stats four-col" id="shipment-stats">
+                  <article class="stat-card">
+                    <p>收货总数量</p>
+                    <strong id="stat-receive-qty">0</strong>
+                    <small id="stat-receive-weight">总重量 0.00 KG / 总立方 0.00 m3</small>
+                  </article>
+                  <article class="stat-card">
+                    <p>发货总数量</p>
+                    <strong id="stat-ship-qty">0</strong>
+                    <small id="stat-ship-weight">总重量 0.00 KG / 总立方 0.00 m3</small>
+                  </article>
+                  <article class="stat-card">
+                    <p>金额合计</p>
+                    <strong id="stat-shipment-fee">¥0.00</strong>
+                    <small id="stat-shipment-declared">回扣合计 ¥0.00</small>
+                  </article>
+                  <article class="stat-card emphasis">
+                    <p>净金额</p>
+                    <strong id="stat-net-qty">¥0.00</strong>
+                    <small id="stat-net-weight">记录 0 条</small>
+                  </article>
+                </div>
+
+                <div class="toolbar">
+                  <label>
+                    筛选
+                    <select id="shipment-filter">
+                      <option value="all">全部</option>
+                      <option value="receive">仅收货</option>
+                      <option value="ship">仅发货</option>
+                    </select>
+                  </label>
+                  <label>
+                    关键词
+                    <input
+                      id="shipment-search"
+                      type="search"
+                      placeholder="搜索序号/厂家/客户/产品/备注"
+                      maxlength="60"
+                    />
+                  </label>
+                  <label>
+                    厂家（可选）
+                    <input
+                      id="shipment-manufacturer-filter"
+                      type="search"
+                      list="shipment-manufacturer-list"
+                      placeholder="输入厂家快速筛选/导出"
+                      maxlength="60"
+                    />
+                  </label>
+                  <label>
+                    开始日期
+                    <input id="shipment-from-date" type="date" />
+                  </label>
+                  <label>
+                    结束日期
+                    <input id="shipment-to-date" type="date" />
+                  </label>
+                  <button type="button" class="ghost-btn" id="shipment-clear-date">清空日期</button>
+                </div>
+
+                <div class="table-wrap">
+                  <table class="shipment-ledger-table">
+                    <thead>
+                      <tr>
+                        <th>
+                          <input
+                            id="shipment-export-select-all"
+                            class="shipment-load-select-all"
+                            type="checkbox"
+                            aria-label="全选当前页筛选结果用于导出"
+                          />
+                        </th>
+                        <th>
+                          <button class="th-sort is-active" type="button" data-table-sort="shipment" data-sort-key="date">
+                            日期
+                          </button>
+                        </th>
+                        <th>序号</th>
+                        <th>类型</th>
+                        <th>厂家</th>
+                        <th>客户</th>
+                        <th>产品</th>
+                        <th>
+                          <button class="th-sort" type="button" data-table-sort="shipment" data-sort-key="quantity">
+                            计量值
+                          </button>
+                        </th>
+                        <th>计量单位</th>
+                        <th>单价(元)</th>
+                        <th>
+                          <button class="th-sort" type="button" data-table-sort="shipment" data-sort-key="amount">
+                            金额(元)
+                          </button>
+                        </th>
+                        <th>
+                          <button class="th-sort" type="button" data-table-sort="shipment" data-sort-key="unitWeight">
+                            单位重量（KG）
+                          </button>
+                        </th>
+                        <th>单位立方（m3）</th>
+                        <th>
+                          <button class="th-sort" type="button" data-table-sort="shipment" data-sort-key="totalWeight">
+                            总重量（KG）
+                          </button>
+                        </th>
+                        <th>总立方</th>
+                        <th>中转</th>
+                        <th>送货</th>
+                        <th>提货</th>
+                        <th>回扣(元)</th>
+                        <th>备注</th>
+                        <th>装车状态</th>
+                        <th>去向</th>
+                        <th>收款状态</th>
+                        <th>操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="shipment-table-body"></tbody>
+                  </table>
+                </div>
+                <div class="table-pagination" aria-label="收发记录分页">
+                  <span id="shipment-page-info">暂无数据</span>
+                  <div class="page-actions">
+                    <button class="ghost-btn" id="shipment-prev" type="button">上一页</button>
+                    <button class="ghost-btn" id="shipment-next" type="button">下一页</button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="dispatch-panel"
+          class="panel card reveal delay-2 is-hidden"
+          data-panel
+          aria-labelledby="dispatch-title"
+        >
+          <div class="panel-head">
+            <div class="panel-title">
+              <h2 id="dispatch-title">货物配车</h2>
+              <p>从入库记录中选择产品并执行配货装车。</p>
+            </div>
+            <div class="panel-head-actions">
+              <div class="panel-head-entry-action">
+                <button type="button" class="open-summary-view-btn" data-open-summary-view>进入配车记录区</button>
+              </div>
+              <div class="panel-head-summary-action">
+                <button type="button" class="level-back-btn panel-top-back-btn" data-close-summary-view>
+                  返回配货区
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <div class="work-grid is-function-view" data-summary-layout>
+              <section class="function-zone" aria-label="货物配车功能区">
+                <h3 class="zone-title">配货区</h3>
+
+                <div class="toolbar dispatch-toolbar">
+                  <label>
+                    状态
+                    <select id="dispatch-filter">
+                      <option value="pending">待配车</option>
+                      <option value="loaded">已配车</option>
+                      <option value="all">全部</option>
+                    </select>
+                  </label>
+                  <label>
+                    关键词
+                    <input id="dispatch-search" type="search" placeholder="搜索序号/厂家/客户/产品/备注" maxlength="60" />
+                  </label>
+                  <div class="shipment-load-actions" aria-label="货物配车操作">
+                    <span id="dispatch-selected-count">已选 0 条</span>
+                    <button type="button" class="open-summary-view-btn" id="dispatch-load-btn" disabled>确认配货</button>
+                    <button type="button" class="ghost-btn" id="dispatch-reset-step-btn" hidden>返回重选</button>
+                  </div>
+                </div>
+
+                <div class="table-wrap">
+                  <table class="dispatch-ledger-table">
+                    <thead>
+                      <tr>
+                        <th>日期</th>
+                        <th>序号</th>
+                        <th>厂家</th>
+                        <th>客户</th>
+                        <th>产品</th>
+                        <th>计量值</th>
+                        <th>计量单位</th>
+                        <th>单价(元)</th>
+                        <th>金额(元)</th>
+                        <th>单位重量（KG）</th>
+                        <th>单位立方（m3）</th>
+                        <th>总重量（KG）</th>
+                        <th>总立方</th>
+                        <th>备注</th>
+                        <th>
+                          <input
+                            id="dispatch-select-all-load"
+                            class="shipment-load-select-all"
+                            type="checkbox"
+                            aria-label="全选当前页待配车记录"
+                          />
+                        </th>
+                        <th>装车状态</th>
+                      </tr>
+                    </thead>
+                    <tbody id="dispatch-table-body"></tbody>
+                  </table>
+                </div>
+                <div class="table-pagination" aria-label="货物配车分页">
+                  <span id="dispatch-page-info">暂无数据</span>
+                  <div class="page-actions">
+                    <button class="ghost-btn" id="dispatch-prev" type="button">上一页</button>
+                    <button class="ghost-btn" id="dispatch-next" type="button">下一页</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="display-zone" aria-label="配车记录显示区">
+                <div class="dispatch-record-block">
+                  <div class="zone-head">
+                    <h3 class="zone-title">配车记录</h3>
+                  </div>
+                  <div class="table-wrap">
+                    <table class="dispatch-record-table">
+                      <thead>
+                        <tr>
+                          <th>配车时间</th>
+                          <th>配车日期</th>
+                          <th>几号车</th>
+                          <th>车牌号</th>
+                          <th>司机姓名</th>
+                          <th>联系方式</th>
+                          <th>配好产品</th>
+                          <th>配车条数</th>
+                          <th>总价(元)</th>
+                          <th>总重量（KG）</th>
+                          <th>总立方（m3）</th>
+                          <th>总件数(中件数)</th>
+                          <th>查看</th>
+                        </tr>
+                      </thead>
+                      <tbody id="dispatch-record-body"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="finance-panel"
+          class="panel card reveal delay-2 is-hidden"
+          data-panel
+          aria-labelledby="finance-title"
+        >
+          <div class="panel-head">
+            <div class="panel-title">
+              <h2 id="finance-title">收支总账管理</h2>
+              <p>登记每笔收支，并按总账口径查看累计财务结果。</p>
+            </div>
+              <div class="panel-head-actions">
+                <div class="panel-head-entry-action">
+                  <button type="button" class="open-summary-view-btn" data-open-summary-view>进入汇总区</button>
+                </div>
+                <div class="panel-head-summary-action">
+                  <button type="button" class="level-back-btn panel-top-back-btn" data-close-summary-view>
+                    返回功能区
+                  </button>
+                  <button type="button" class="level-back-btn panel-top-back-btn" id="finance-export-selected">
+                    导出勾选Excel
+                  </button>
+                </div>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <div class="work-grid is-function-view" data-summary-layout>
+              <section class="function-zone" aria-label="收支功能区">
+                <h3 class="zone-title">功能区</h3>
+
+                <form id="finance-form" class="grid-form">
+                  <label>
+                    日期
+                    <input name="date" type="date" required />
+                  </label>
+                  <label>
+                    摘要
+                    <input name="category" type="text" maxlength="60" placeholder="如 运费、人工、回款" required />
+                  </label>
+                  <label>
+                    收入(元)
+                    <input name="income" type="number" min="0" step="0.01" placeholder="留空按支出登记" />
+                  </label>
+                  <label>
+                    支出(元)
+                    <input name="expense" type="number" min="0" step="0.01" placeholder="留空按收入登记" />
+                  </label>
+                  <label class="full">
+                    备注
+                    <textarea
+                      name="note"
+                      rows="2"
+                      maxlength="200"
+                      placeholder="可记录支付方式、凭证号等"
+                    ></textarea>
+                  </label>
+                  <button class="primary-btn full" type="submit">保存账目</button>
+                </form>
+              </section>
+
+              <section class="display-zone" aria-label="收支显示区">
+                <div class="zone-head">
+                  <h3 class="zone-title">总账区</h3>
+                </div>
+                <div class="stats three-col" id="finance-stats">
+                  <article class="stat-card">
+                    <p>累计收入</p>
+                    <strong id="stat-today-income">¥0.00</strong>
+                  </article>
+                  <article class="stat-card">
+                    <p>累计支出</p>
+                    <strong id="stat-today-expense">¥0.00</strong>
+                  </article>
+                  <article class="stat-card emphasis">
+                    <p>累计结余</p>
+                    <strong id="stat-month-balance">¥0.00</strong>
+                    <small id="stat-month-breakdown">本月收入 ¥0.00 / 本月支出 ¥0.00 / 本月结余 ¥0.00</small>
+                  </article>
+                </div>
+                <p class="summary-hint">此处为总账视图；按日期区间统计请使用“日常汇总”。</p>
+
+                <div class="toolbar">
+                  <label>
+                    筛选
+                    <select id="finance-filter">
+                      <option value="all">全部</option>
+                      <option value="income">仅收入</option>
+                      <option value="expense">仅支出</option>
+                    </select>
+                  </label>
+                  <label>
+                    月份（可选）
+                    <input id="finance-month" type="month" />
+                  </label>
+                  <label>
+                    关键词
+                    <input id="finance-search" type="search" placeholder="搜索摘要/备注" maxlength="60" />
+                  </label>
+                  <label>
+                    开始日期
+                    <input id="finance-from-date" type="date" />
+                  </label>
+                  <label>
+                    结束日期
+                    <input id="finance-to-date" type="date" />
+                  </label>
+                  <button type="button" class="ghost-btn" id="finance-clear-date">清空日期</button>
+                </div>
+
+                <div class="table-wrap">
+                  <table class="finance-ledger-table">
+                    <thead>
+                      <tr>
+                        <th>
+                          <input
+                            id="finance-export-select-all"
+                            class="finance-export-select-all"
+                            type="checkbox"
+                            aria-label="全选当前页筛选结果用于导出"
+                          />
+                        </th>
+                        <th>
+                          <button class="th-sort is-active" type="button" data-table-sort="finance" data-sort-key="date">
+                            日期
+                          </button>
+                        </th>
+                        <th>摘要</th>
+                        <th>收入</th>
+                        <th>支出</th>
+                        <th>余额</th>
+                        <th>操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="finance-table-body"></tbody>
+                  </table>
+                </div>
+                <div class="table-pagination" aria-label="收支记录分页">
+                  <span id="finance-page-info">暂无数据</span>
+                  <div class="page-actions">
+                    <button class="ghost-btn" id="finance-prev" type="button">上一页</button>
+                    <button class="ghost-btn" id="finance-next" type="button">下一页</button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="status-panel"
+          class="panel card reveal delay-2 is-hidden"
+          data-panel
+          aria-labelledby="status-title"
+        >
+          <div class="panel-head">
+            <div class="panel-title">
+              <h2 id="status-title">家结收款提醒</h2>
+              <p>备注含“家结”的货物，录入满1个月后自动进入提醒；可稍后处理（1小时后再提醒）、马上联系、或直接标记已收款。</p>
+            </div>
+            <div class="panel-head-actions">
+              <div class="panel-head-entry-action">
+                <button type="button" class="open-summary-view-btn" data-open-summary-view>进入处理记录区</button>
+              </div>
+              <div class="panel-head-summary-action">
+                <button type="button" class="level-back-btn panel-top-back-btn" data-close-summary-view>
+                  返回提醒区
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <div class="work-grid is-function-view status-work-grid" data-summary-layout>
+              <section class="function-zone" aria-label="家结收款提醒筛选区">
+                <h3 class="zone-title">功能区</h3>
+
+                <div class="stats four-col status-stats">
+                  <article class="stat-card">
+                    <p>提醒总数</p>
+                    <strong id="status-stat-total">0</strong>
+                    <small>当前应提醒（未收款）</small>
+                  </article>
+                  <article class="stat-card">
+                    <p>待收款</p>
+                    <strong id="status-stat-pending">0</strong>
+                    <small>已到期且未收款</small>
+                  </article>
+                  <article class="stat-card">
+                    <p>已提醒</p>
+                    <strong id="status-stat-active">0</strong>
+                    <small>已执行提醒动作</small>
+                  </article>
+                  <article class="stat-card emphasis">
+                    <p>已收款</p>
+                    <strong id="status-stat-done">0</strong>
+                    <small>提醒后已收款</small>
+                  </article>
+                </div>
+
+                <div class="toolbar">
+                  <label>
+                    状态
+                    <select id="status-filter">
+                      <option value="all">全部</option>
+                      <option value="unpaid">待收款</option>
+                      <option value="reminded">已提醒</option>
+                    </select>
+                  </label>
+                  <label>
+                    关键词
+                    <input id="status-search" type="search" placeholder="搜索序号/厂家/客户/产品/备注" maxlength="80" />
+                  </label>
+                  <label>
+                    开始日期
+                    <input id="status-from-date" type="date" />
+                  </label>
+                  <label>
+                    结束日期
+                    <input id="status-to-date" type="date" />
+                  </label>
+                  <button type="button" class="ghost-btn" id="status-clear-date">清空日期</button>
+                </div>
+                <div class="table-wrap">
+                  <table class="status-ledger-table">
+                    <thead>
+                      <tr>
+                        <th>日期</th>
+                        <th>序号</th>
+                        <th>厂家</th>
+                        <th>客户</th>
+                        <th>产品</th>
+                        <th>欠款金额</th>
+                        <th>操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="status-table-body"></tbody>
+                  </table>
+                </div>
+                <div class="table-pagination" aria-label="家结状态分页">
+                  <span id="status-page-info">暂无数据</span>
+                  <div class="page-actions">
+                    <button class="ghost-btn" id="status-prev" type="button">上一页</button>
+                    <button class="ghost-btn" id="status-next" type="button">下一页</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="display-zone" aria-label="家结收款提醒处理记录区">
+                <h3 class="zone-title">家结收款提醒处理记录</h3>
+                <p class="summary-hint">记录每一次提醒动作，便于复盘“谁在什么时候做了什么处理、处理结果如何”。</p>
+                <div class="toolbar status-action-record-toolbar">
+                  <label>
+                    处理类型
+                    <select id="status-action-record-filter">
+                      <option value="all">全部</option>
+                      <option value="snooze">稍后处理(1小时)</option>
+                      <option value="contact">马上联系</option>
+                      <option value="paid">已收款</option>
+                    </select>
+                  </label>
+                  <label>
+                    关键词
+                    <input
+                      id="status-action-record-search"
+                      type="search"
+                      placeholder="搜索序号/厂家/客户/产品/处理说明"
+                      maxlength="80"
+                    />
+                  </label>
+                  <label>
+                    开始日期
+                    <input id="status-action-record-from-date" type="date" />
+                  </label>
+                  <label>
+                    结束日期
+                    <input id="status-action-record-to-date" type="date" />
+                  </label>
+                  <button type="button" class="ghost-btn" id="status-action-record-clear-date">清空日期</button>
+                </div>
+                <div class="table-wrap status-action-record-wrap">
+                  <table class="status-action-record-table">
+                    <thead>
+                      <tr>
+                        <th>处理时间</th>
+                        <th>货物日期</th>
+                        <th>序号</th>
+                        <th>厂家</th>
+                        <th>客户</th>
+                        <th>产品</th>
+                        <th>处理类型</th>
+                        <th>处理结果</th>
+                        <th>欠款金额</th>
+                        <th>备注</th>
+                      </tr>
+                    </thead>
+                    <tbody id="status-action-record-table-body"></tbody>
+                  </table>
+                </div>
+                <div class="table-pagination" aria-label="家结处理记录分页">
+                  <span id="status-action-record-page-info">暂无数据</span>
+                  <div class="page-actions">
+                    <button class="ghost-btn" id="status-action-record-prev" type="button">上一页</button>
+                    <button class="ghost-btn" id="status-action-record-next" type="button">下一页</button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="daily-summary-panel"
+          class="panel card reveal delay-2 is-hidden"
+          data-panel
+          aria-labelledby="daily-summary-title"
+        >
+          <div class="panel-head">
+            <div class="panel-title">
+              <h2 id="daily-summary-title">日常汇总</h2>
+              <p>按区间查看收发、收支的关键统计与明细记录。</p>
+            </div>
+            <div class="panel-head-actions">
+              <div class="panel-head-entry-action">
+                <button type="button" class="open-summary-view-btn" data-open-summary-view>进入汇总区</button>
+              </div>
+              <div class="panel-head-summary-action">
+                <button type="button" class="level-back-btn panel-top-back-btn" data-close-summary-view>
+                  返回功能区
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <div class="work-grid is-function-view" data-summary-layout>
+              <section class="function-zone" aria-label="日常汇总功能区">
+                <h3 class="zone-title">功能区</h3>
+                <form id="summary-form" class="summary-form">
+                  <label>
+                    开始日期
+                    <input id="summary-from-date" type="date" />
+                  </label>
+                  <label>
+                    结束日期
+                    <input id="summary-to-date" type="date" />
+                  </label>
+                  <button class="primary-btn" type="submit">更新汇总</button>
+                  <button class="ghost-btn" id="summary-reset-range" type="button">重置本月</button>
+                </form>
+                <p class="summary-hint">按日期区间汇总日常收发和收支记录。</p>
+                <div class="summary-quick-range" aria-label="快捷日期区间">
+                  <button class="ghost-btn summary-quick-btn" type="button" data-summary-quick-range="today">今天</button>
+                  <button class="ghost-btn summary-quick-btn" type="button" data-summary-quick-range="yesterday">昨天</button>
+                  <button class="ghost-btn summary-quick-btn" type="button" data-summary-quick-range="last7">近7天</button>
+                  <button class="ghost-btn summary-quick-btn" type="button" data-summary-quick-range="thisMonth">本月</button>
+                  <button class="ghost-btn summary-quick-btn" type="button" data-summary-quick-range="lastMonth">上月</button>
+                </div>
+              </section>
+
+              <section class="display-zone" aria-label="日常汇总显示区">
+                <div class="zone-head">
+                  <h3 class="zone-title">汇总区</h3>
+                </div>
+                <div class="summary-subnav" aria-label="子项目汇总区">
+                  <button
+                    type="button"
+                    class="summary-sub-btn is-active"
+                    data-summary-view="shipment"
+                    aria-controls="summary-group-shipment"
+                  >
+                    收货与发货统计
+                  </button>
+                  <button
+                    type="button"
+                    class="summary-sub-btn"
+                    data-summary-view="finance"
+                    aria-controls="summary-group-finance"
+                  >
+                    日常收支
+                  </button>
+                </div>
+
+                <div class="summary-group" id="summary-group-shipment" data-summary-group="shipment">
+                  <h4 class="summary-group-title">收货与发货统计</h4>
+                  <div class="stats four-col" id="daily-summary-shipment-stats">
+                    <article class="stat-card">
+                      <p>统计天数</p>
+                      <strong id="summary-ship-stat-days">0</strong>
+                    </article>
+                    <article class="stat-card">
+                      <p>收货总数量</p>
+                      <strong id="summary-ship-stat-receive-qty">0</strong>
+                      <small id="summary-ship-stat-receive-weight">总重量 0.00 KG / 总立方 0.00 m3</small>
+                    </article>
+                    <article class="stat-card">
+                      <p>发货总数量</p>
+                      <strong id="summary-ship-stat-ship-qty">0</strong>
+                      <small id="summary-ship-stat-ship-weight">总重量 0.00 KG / 总立方 0.00 m3</small>
+                    </article>
+                    <article class="stat-card emphasis">
+                      <p>金额合计</p>
+                      <strong id="summary-ship-stat-net-qty">¥0.00</strong>
+                      <small id="summary-ship-stat-net-weight">回扣 ¥0.00 / 净额 ¥0.00</small>
+                    </article>
+                  </div>
+
+                <div class="summary-block">
+                  <h4>收发登记明细</h4>
+                  <div class="summary-inline-toolbar">
+                    <label>
+                      关键词
+                      <input
+                        id="summary-shipment-search"
+                        type="search"
+                        maxlength="60"
+                        placeholder="搜索序号/厂家/客户/产品/备注/状态"
+                      />
+                    </label>
+                    <button class="ghost-btn" id="summary-shipment-clear-search" type="button">清空</button>
+                  </div>
+                  <div class="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>类型</th>
+                            <th>序号</th>
+                            <th>厂家</th>
+                            <th>客户</th>
+                            <th>产品</th>
+                            <th>计量值</th>
+                            <th>计量单位</th>
+                            <th>金额(元)</th>
+                            <th>单位重量（KG）</th>
+                            <th>单位立方（m3）</th>
+                            <th>总重量（KG）</th>
+                            <th>总立方</th>
+                            <th>备注</th>
+                            <th>装车状态</th>
+                            <th>收款状态</th>
+                          </tr>
+                        </thead>
+                        <tbody id="summary-shipment-body"></tbody>
+                      </table>
+                    </div>
+                    <div class="summary-pagination" aria-label="收发日汇总分页">
+                      <button class="ghost-btn" id="summary-shipment-prev" type="button">上一页</button>
+                      <span id="summary-shipment-page-info">暂无数据</span>
+                      <button class="ghost-btn" id="summary-shipment-next" type="button">下一页</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  class="summary-group is-hidden-sub"
+                  id="summary-group-finance"
+                  data-summary-group="finance"
+                >
+                  <h4 class="summary-group-title">日常收支</h4>
+                  <div class="stats four-col" id="daily-summary-finance-stats">
+                    <article class="stat-card">
+                      <p>统计天数</p>
+                      <strong id="summary-fin-stat-days">0</strong>
+                    </article>
+                    <article class="stat-card">
+                      <p>收入合计</p>
+                      <strong id="summary-fin-stat-income">¥0.00</strong>
+                    </article>
+                    <article class="stat-card">
+                      <p>支出合计</p>
+                      <strong id="summary-fin-stat-expense">¥0.00</strong>
+                    </article>
+                    <article class="stat-card emphasis">
+                      <p>结余</p>
+                      <strong id="summary-fin-stat-balance">¥0.00</strong>
+                      <small id="summary-fin-stat-records">记录 0</small>
+                    </article>
+                  </div>
+
+                <div class="summary-block">
+                  <h4>收支登记明细</h4>
+                  <div class="summary-inline-toolbar">
+                    <label>
+                      关键词
+                      <input
+                        id="summary-finance-search"
+                        type="search"
+                        maxlength="60"
+                        placeholder="搜索摘要/备注/类型"
+                      />
+                    </label>
+                    <button class="ghost-btn" id="summary-finance-clear-search" type="button">清空</button>
+                  </div>
+                  <div class="table-wrap">
+                    <table class="finance-ledger-table summary-finance-ledger-table">
+                      <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>摘要</th>
+                            <th>收入</th>
+                            <th>支出</th>
+                            <th>余额</th>
+                          </tr>
+                        </thead>
+                        <tbody id="summary-finance-body"></tbody>
+                      </table>
+                    </div>
+                    <div class="summary-pagination" aria-label="收支日汇总分页">
+                      <button class="ghost-btn" id="summary-finance-prev" type="button">上一页</button>
+                      <span id="summary-finance-page-info">暂无数据</span>
+                      <button class="ghost-btn" id="summary-finance-next" type="button">下一页</button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        </div>
+      </div>
+    </main>
+
+    <script src="./vendor/xlsx.full.min.js"></script>
+    <div id="undo-toast" class="undo-toast is-hidden" role="status" aria-live="polite">
+      <span id="undo-toast-text">已删除 1 条记录</span>
+      <div class="undo-actions">
+        <button id="undo-delete-btn" class="ghost-btn" type="button">撤销</button>
+        <span id="undo-countdown">5s</span>
+      </div>
+    </div>
+
+    <div
+      id="storage-import-preview-modal"
+      class="dispatch-record-modal storage-import-preview-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="storage-import-preview-title"
+    >
+      <div class="dispatch-record-modal-card storage-import-preview-card">
+        <div class="dispatch-record-modal-head">
+          <h3 id="storage-import-preview-title">读取数据包预览</h3>
+          <button id="storage-import-preview-close" class="ghost-btn" type="button">关闭</button>
+        </div>
+        <p id="storage-import-preview-tip" class="dispatch-meta-modal-tip">请先确认导入内容。</p>
+        <div class="table-wrap storage-import-preview-table-wrap">
+          <table class="dispatch-record-detail-table storage-import-preview-table">
+            <thead>
+              <tr>
+                <th>数据项</th>
+                <th>记录数</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody id="storage-import-preview-body"></tbody>
+          </table>
+        </div>
+        <div class="dispatch-meta-modal-actions">
+          <button id="storage-import-preview-cancel" class="ghost-btn" type="button">取消</button>
+          <button id="storage-import-preview-confirm" class="primary-btn" type="button">确认导入</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="shipment-import-preview-modal"
+      class="dispatch-record-modal shipment-import-preview-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="shipment-import-preview-title"
+    >
+      <div class="dispatch-record-modal-card shipment-import-preview-card">
+        <div class="dispatch-record-modal-head">
+          <h3 id="shipment-import-preview-title">批量导入预览</h3>
+          <button id="shipment-import-preview-close" class="ghost-btn" type="button">关闭</button>
+        </div>
+        <p id="shipment-import-preview-tip" class="dispatch-meta-modal-tip">请先确认导入数据。</p>
+        <div class="table-wrap shipment-import-preview-table-wrap">
+          <table class="dispatch-record-detail-table shipment-import-preview-table">
+            <thead>
+              <tr>
+                <th>行号</th>
+                <th>日期</th>
+                <th>序号</th>
+                <th>厂家</th>
+                <th>客户</th>
+                <th>产品</th>
+                <th>计量值</th>
+                <th>计量单位</th>
+                <th>单价(元)</th>
+                <th>金额(元)</th>
+                <th>单位重量（KG）</th>
+                <th>单位立方（m3）</th>
+                <th>备注</th>
+                <th>校验结果</th>
+              </tr>
+            </thead>
+            <tbody id="shipment-import-preview-body"></tbody>
+          </table>
+        </div>
+        <div class="dispatch-meta-modal-actions">
+          <button id="shipment-import-preview-cancel" class="ghost-btn" type="button">取消</button>
+          <button id="shipment-import-preview-confirm" class="primary-btn" type="button">确认导入</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="shipment-export-preview-modal"
+      class="dispatch-record-modal shipment-export-preview-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="shipment-export-preview-title"
+    >
+      <div class="dispatch-record-modal-card shipment-export-preview-card">
+        <div class="dispatch-record-modal-head">
+          <h3 id="shipment-export-preview-title">导出预览</h3>
+          <button id="shipment-export-preview-close" class="ghost-btn" type="button">关闭</button>
+        </div>
+        <p id="shipment-export-preview-tip" class="dispatch-meta-modal-tip">请先确认导出数据。</p>
+        <div class="table-wrap shipment-export-preview-table-wrap">
+          <table class="dispatch-record-detail-table shipment-export-preview-table">
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>序号</th>
+                <th>厂家</th>
+                <th>客户</th>
+                <th>产品</th>
+                <th>计量值</th>
+                <th>计量单位</th>
+                <th>单价(元)</th>
+                <th>金额(元)</th>
+                <th>总重量（KG）</th>
+                <th>总立方（m3）</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody id="shipment-export-preview-body"></tbody>
+          </table>
+        </div>
+        <div class="dispatch-meta-modal-actions">
+          <button id="shipment-export-preview-cancel" class="ghost-btn" type="button">取消</button>
+          <button id="shipment-export-preview-confirm" class="primary-btn" type="button">确认导出</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="finance-export-preview-modal"
+      class="dispatch-record-modal finance-export-preview-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="finance-export-preview-title"
+    >
+      <div class="dispatch-record-modal-card finance-export-preview-card">
+        <div class="dispatch-record-modal-head">
+          <h3 id="finance-export-preview-title">导出预览</h3>
+          <button id="finance-export-preview-close" class="ghost-btn" type="button">关闭</button>
+        </div>
+        <p id="finance-export-preview-tip" class="dispatch-meta-modal-tip">请先确认导出数据。</p>
+        <div class="table-wrap finance-export-preview-table-wrap">
+          <table class="dispatch-record-detail-table finance-export-preview-table">
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>摘要</th>
+                <th>收入(元)</th>
+                <th>支出(元)</th>
+                <th>余额(元)</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody id="finance-export-preview-body"></tbody>
+          </table>
+        </div>
+        <div class="dispatch-meta-modal-actions">
+          <button id="finance-export-preview-cancel" class="ghost-btn" type="button">取消</button>
+          <button id="finance-export-preview-confirm" class="primary-btn" type="button">确认并导出</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="dispatch-meta-modal" class="dispatch-record-modal dispatch-meta-modal" role="dialog" aria-modal="true" aria-labelledby="dispatch-meta-modal-title">
+      <div class="dispatch-record-modal-card dispatch-meta-modal-card">
+        <div class="dispatch-record-modal-head">
+          <h3 id="dispatch-meta-modal-title">填写车辆信息</h3>
+          <button id="dispatch-meta-modal-close" class="ghost-btn" type="button">关闭</button>
+        </div>
+        <p id="dispatch-meta-modal-tip" class="dispatch-meta-modal-tip">请先确认配货无误，再填写车辆信息完成装车。</p>
+        <div class="dispatch-meta-grid" aria-label="配车基础信息">
+          <label>
+            日期
+            <input id="dispatch-meta-date" type="date" />
+          </label>
+          <label>
+            几号车
+            <input id="dispatch-meta-truck-no" type="text" maxlength="20" placeholder="如：1号车" />
+          </label>
+          <label>
+            车牌号
+            <input id="dispatch-meta-plate-no" type="text" maxlength="20" placeholder="如：冀A12345" />
+          </label>
+          <label>
+            司机姓名
+            <input id="dispatch-meta-driver" type="text" maxlength="20" placeholder="司机姓名" />
+          </label>
+          <label>
+            联系方式
+            <input id="dispatch-meta-contact-name" type="text" maxlength="20" placeholder="联系电话/联系人" />
+          </label>
+        </div>
+        <div class="dispatch-meta-modal-actions">
+          <button id="dispatch-meta-cancel-btn" class="ghost-btn" type="button">返回重选</button>
+          <button id="dispatch-meta-confirm-btn" class="primary-btn" type="button">确认装车</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="dispatch-record-modal" class="dispatch-record-modal" role="dialog" aria-modal="true" aria-labelledby="dispatch-record-modal-title">
+      <div class="dispatch-record-modal-card">
+        <div class="dispatch-record-modal-head">
+          <h3 id="dispatch-record-modal-title">配车记录详情</h3>
+          <button id="dispatch-record-edit-btn" class="open-summary-view-btn" type="button">二次配车</button>
+          <button id="dispatch-record-delete-btn" class="delete-btn" type="button">删除记录</button>
+          <button id="dispatch-record-export-btn" class="ghost-btn" type="button">导出 Excel</button>
+          <button id="dispatch-record-modal-close" class="ghost-btn" type="button">关闭</button>
+        </div>
+        <div id="dispatch-record-modal-summary" class="dispatch-record-modal-summary"></div>
+        <div class="table-wrap">
+          <table class="dispatch-record-detail-table">
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>序号</th>
+                <th>厂家</th>
+                <th>客户</th>
+                <th>产品</th>
+                <th>计量值</th>
+                <th>计量单位</th>
+                <th>金额(元)</th>
+                <th>总重量（KG）</th>
+                <th>总立方（m3）</th>
+                <th>备注</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="dispatch-record-detail-body"></tbody>
+          </table>
+        </div>
+        <div id="dispatch-record-edit-panel" class="dispatch-record-edit-panel is-hidden">
+          <h4 class="dispatch-record-edit-title">追加待配货物</h4>
+          <p class="dispatch-record-edit-tip">可将“待配车”货物追加到当前车次，并支持在明细中移除已配货物。</p>
+          <div class="dispatch-record-edit-toolbar">
+            <label>
+              关键词
+              <input id="dispatch-record-add-search" type="search" maxlength="60" placeholder="搜索序号/厂家/客户/产品/备注" />
+            </label>
+            <button id="dispatch-record-add-clear-btn" class="ghost-btn" type="button">清空搜索</button>
+          </div>
+          <div class="table-wrap">
+            <table class="dispatch-record-add-table">
+              <thead>
+                <tr>
+                  <th>
+                    <input
+                      id="dispatch-record-add-select-all"
+                      class="shipment-load-select-all"
+                      type="checkbox"
+                      aria-label="全选可追加货物"
+                    />
+                  </th>
+                  <th>日期</th>
+                  <th>序号</th>
+                  <th>厂家</th>
+                  <th>客户</th>
+                  <th>产品</th>
+                  <th>计量值</th>
+                  <th>计量单位</th>
+                  <th>金额(元)</th>
+                </tr>
+              </thead>
+              <tbody id="dispatch-record-add-body"></tbody>
+            </table>
+          </div>
+          <div class="dispatch-record-edit-actions">
+            <span id="dispatch-record-add-selected-count">已选 0 条</span>
+            <button id="dispatch-record-add-btn" class="primary-btn" type="button" disabled>追加到当前车次</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="status-detail-modal"
+      class="dispatch-record-modal status-detail-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="status-detail-modal-title"
+    >
+      <div class="dispatch-record-modal-card status-detail-modal-card">
+        <div class="dispatch-record-modal-head">
+          <h3 id="status-detail-modal-title">家结提醒详情</h3>
+          <button id="status-detail-modal-close" class="ghost-btn" type="button">关闭</button>
+        </div>
+        <div id="status-detail-modal-content" class="status-detail-content"></div>
+      </div>
+    </div>
+
+    <div
+      id="confirm-modal"
+      class="dispatch-record-modal confirm-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-modal-title"
+    >
+      <div class="dispatch-record-modal-card confirm-modal-card">
+        <div class="dispatch-record-modal-head">
+          <h3 id="confirm-modal-title">操作确认</h3>
+          <button id="confirm-modal-close" class="ghost-btn" type="button">关闭</button>
+        </div>
+        <p id="confirm-modal-message" class="confirm-modal-message">请确认是否继续该操作。</p>
+        <div class="dispatch-meta-modal-actions">
+          <button id="confirm-modal-cancel" class="ghost-btn" type="button">取消</button>
+          <button id="confirm-modal-confirm" class="primary-btn" type="button">确认</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="./price-catalog.js?v=20260220-01"></script>
+    <script src="./app.js?v=20260223-01"></script>
+  </body>
 </html>
