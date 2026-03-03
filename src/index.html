@@ -1,11 +1,1033 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        Hello World
-    </body>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>能量流动思维导图 · 完整食物链</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+:root{
+  --bg:#ffffff; --c1:#ffffff; --c2:#f7f7f7; --c3:#efefef;
+  --b0:#d9d9d9; --b1:#bfbfbf; --b2:#a6a6a6;
+  --green:#1f8a43; --g2:#1a6f37; --g3:#e8f4ed;
+  --amber:#cc7f14; --gold:#9b6a11; --red:#cc3b3b;
+  --blue:#2f7ec6; --brown:#9a6a2d; --gray:#6f7f6b;
+  --text:#111111; --dim:#2a2a2a; --dim2:#5a5a5a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 120% 55% at 50% -10%,#ececec 0%,transparent 55%),
+             radial-gradient(ellipse 35% 30% at 5% 95%,#f3f3f3 0%,transparent 50%);
+  pointer-events:none;}
+
+.app{position:relative;width:100%;max-width:none;min-height:100vh;margin:0;padding:12px 20px 50px;}
+
+/* ── HEADER ── */
+header{text-align:center;padding:18px 0 12px;}
+header h1{font-family:'ZCOOL KuaiLe',cursive;font-size:clamp(1.3rem,3.5vw,2rem);color:var(--text);letter-spacing:4px;text-shadow:none;}
+header p{color:var(--dim);font-size:.78rem;margin-top:4px;}
+
+/* ── LEVEL PILLS ── */
+.pills{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:0 0 14px;}
+.pill{display:flex;align-items:center;gap:6px;padding:5px 14px;border-radius:30px;background:var(--c1);border:1.5px solid var(--b0);font-size:.74rem;color:var(--dim);transition:all .3s;}
+.pill.active{background:var(--g3);border-color:var(--green);color:var(--text);font-weight:600;}
+.pill.done{border-color:var(--green);color:var(--green);}
+.pill .pn{width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700;background:var(--b0);}
+.pill.active .pn,.pill.done .pn{background:var(--green);color:var(--bg);}
+
+/* ── MAP SCROLL ── */
+.map-scroll{width:100%;overflow:auto;border-radius:16px;margin-bottom:12px;
+  scrollbar-width:thin;scrollbar-color:var(--b1) var(--c1);cursor:grab;}
+.map-scroll:active{cursor:grabbing;}
+.map-scroll::-webkit-scrollbar{height:5px;}
+.map-scroll::-webkit-scrollbar-track{background:var(--c1);}
+.map-scroll::-webkit-scrollbar-thumb{background:var(--b1);border-radius:3px;}
+
+.map-stage{position:relative;width:1750px;height:548px;}
+.map-canvas{position:relative;width:1750px;height:548px;background:var(--c1);border:1px solid var(--b0);border-radius:16px;overflow:visible;transform-origin:0 0;}
+.map-canvas::before{content:'';position:absolute;inset:0;border-radius:16px;
+  background-image:radial-gradient(circle,#d7d7d7 1px,transparent 1px);background-size:26px 26px;pointer-events:none;}
+
+/* ── SVG OVERLAY ── */
+#msvg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;}
+
+/* ── LEVEL LABEL BADGES ── */
+.lvlbadge{position:absolute;transform:translateX(-50%);display:flex;align-items:center;gap:6px;
+  background:var(--c2);border:1.5px solid var(--b0);border-radius:20px;
+  padding:5px 14px;font-size:.74rem;color:var(--dim);white-space:nowrap;
+  transition:all .5s ease;}
+.lvlbadge.active{border-color:var(--green);color:var(--green);background:#eef8f2;}
+.lvlbadge.done{border-color:var(--green);color:var(--green);}
+.lvlbadge.locked{opacity:.2;}
+.lvlbadge .lbe{font-size:1.1rem;}
+.lvlbadge .lbcheck{color:var(--green);font-size:.9rem;display:none;}
+.lvlbadge.done .lbcheck{display:inline;}
+
+/* ── NODE CARDS ── */
+.nd{position:absolute;border-radius:12px;padding:8px 9px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;transition:border-color .3s,box-shadow .3s,opacity .5s,filter .5s;}
+.nd .ni{font-size:1rem;line-height:1;margin-bottom:2px;}
+.nd .nl{font-size:.67rem;color:var(--dim);line-height:1.3;white-space:nowrap;}
+.nd .ns{font-size:.57rem;color:var(--dim2);line-height:1.2;white-space:nowrap;}
+.nd .nv{font-size:1.05rem;font-weight:700;display:flex;align-items:baseline;gap:1px;margin-top:3px;}
+.nd .nu{font-size:.58rem;font-weight:400;color:var(--dim);}
+
+/* given */
+.nd.given{background:#ffffff;border:2.5px solid var(--green);box-shadow:0 0 0 2px #e7f5ec;}
+.nd.given .nl{color:var(--text);font-size:.72rem;}
+.nd.given .nv{color:var(--gold);font-size:1.15rem;}
+
+/* blank */
+.nd.blank{background:var(--c2);border:2px dashed var(--b1);cursor:pointer;}
+.nd.blank:hover:not(.locked-nd){border-color:var(--green);transform:translateY(-3px);box-shadow:0 6px 18px #00000014;}
+.nd.blank .nv{color:var(--dim2);font-size:1.5rem;letter-spacing:4px;}
+.nd.blank.hot{border:2.5px dashed var(--amber)!important;background:#f5a6230d!important;animation:hotpls 1.5s ease infinite;}
+.nd.blank.chosen{border:2.5px solid var(--amber)!important;background:#f5a6230d!important;transform:translateY(-2px) scale(1.04);}
+@keyframes hotpls{0%,100%{box-shadow:0 0 8px #f5a62322;}50%{box-shadow:0 0 22px #f5a62355;}}
+
+/* filled type classes */
+.nd.filled{cursor:default;}
+.nd.filled.tr{background:#fff4f4;border:2px solid var(--red);} .nd.filled.tr .nv{color:var(--red);}
+.nd.filled.tg{background:#f2fbf5;border:2px solid var(--green);} .nd.filled.tg .nv{color:var(--green);}
+.nd.filled.tn{background:#f2f8ff;border:2px solid var(--blue);} .nd.filled.tn .nv{color:var(--blue);}
+.nd.filled.td{background:#fff8f0;border:2px solid var(--brown);} .nd.filled.td .nv{color:var(--brown);}
+.nd.filled.tu{background:#f5f7f5;border:2px solid var(--gray);} .nd.filled.tu .nv{color:var(--gray);}
+.nd.filled.tf{background:#fffbef;border:2px dashed #b0aa18;} .nd.filled.tf .nv{color:#a08f10;}
+.nd.filled.ta{background:#f2fbf5;border:2px solid var(--g2);} .nd.filled.ta .nv{color:var(--green);}
+.nd.pop{animation:popin .42s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popin{from{transform:scale(.65);opacity:.2;}to{transform:scale(1);opacity:1;}}
+.nd.shake{animation:shk .42s ease;}
+@keyframes shk{0%,100%{transform:translateX(0);}22%{transform:translateX(-9px);}44%{transform:translateX(9px);}66%{transform:translateX(-6px);}88%{transform:translateX(6px);}}
+
+/* locked state */
+.nd.locked-nd{opacity:.18;filter:blur(.8px);pointer-events:none!important;cursor:default!important;}
+.nd.unlocking{animation:unlk .6s ease forwards;}
+@keyframes unlk{from{opacity:.18;filter:blur(.8px);}to{opacity:1;filter:blur(0);}}
+
+/* feces badge */
+.fbadge{position:absolute;top:-9px;right:-4px;background:#b2a600;color:#111;font-size:.54rem;font-weight:700;padding:2px 6px;border-radius:6px;white-space:nowrap;z-index:3;}
+
+/* no-next placeholder */
+.nd.nonext{opacity:.3;pointer-events:none;border-style:dashed!important;}
+.nd.nonext .nv{font-size:.72rem;letter-spacing:0;color:var(--dim);}
+
+/* ── CHIP BANK ── */
+.chipbank{background:var(--c1);border:1px solid var(--b0);border-radius:15px;padding:13px 16px;margin-bottom:11px;min-height:76px;transition:all .3s;}
+.chipbank h4{font-size:.74rem;color:var(--dim);margin-bottom:9px;text-align:center;}
+.chiprow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+.chip{display:flex;flex-direction:column;align-items:center;padding:8px 18px;border-radius:11px;
+  background:var(--c2);border:2px solid var(--g3);cursor:grab;user-select:none;transition:all .2s;min-width:62px;}
+.chip:active{cursor:grabbing;}
+.chip .cv{font-size:1.1rem;font-weight:700;color:var(--text);}
+.chip .cu{font-size:.58rem;color:var(--dim);margin-top:1px;}
+.chip:hover:not(.used):not(.sel){background:var(--g3);transform:translateY(-2px);}
+.chip.sel{background:var(--g3);border-color:var(--green);box-shadow:0 0 14px #1f8a4322;} .chip.sel .cv{color:var(--text);}
+.chip.used{opacity:.2;cursor:not-allowed;text-decoration:line-through;}
+.chip.drag{opacity:.4;transform:scale(.9);}
+.no-chips{text-align:center;color:var(--dim);font-size:.8rem;padding:10px 0;}
+
+/* ── FEEDBACK ── */
+.fb{text-align:center;padding:9px 16px;border-radius:12px;font-size:.83rem;margin-bottom:11px;
+  min-height:40px;display:flex;align-items:center;justify-content:center;line-height:1.6;transition:all .25s;}
+.fbi{background:var(--c2);border:1px solid var(--b0);color:var(--dim);}
+.fbok{background:#eef8f2;border:1px solid var(--green);color:var(--green);}
+.fber{background:#fff0f0;border:1px solid var(--red);color:var(--red);}
+.fbdn{background:#fff9eb;border:1.5px solid var(--amber);color:#8c5c18;font-weight:600;}
+
+/* ── FORMULA PANELS ── */
+.fmls{margin-bottom:12px;}
+.fmlpanel{background:var(--c2);border:1px solid var(--b0);border-radius:13px;padding:13px 18px;
+  font-size:.8rem;line-height:2;color:var(--dim);margin-bottom:8px;
+  display:none;animation:fdup .45s ease;}
+.fmlpanel.show{display:block;}
+@keyframes fdup{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.fmlpanel .fmh{font-size:.82rem;color:var(--gold);font-weight:600;margin-bottom:4px;}
+
+/* ── SCROLL HINT ── */
+.scrhint{text-align:center;font-size:.72rem;color:var(--dim2);margin-bottom:8px;letter-spacing:1px;}
+.touch-tip{text-align:center;font-size:.76rem;color:var(--dim2);margin:0 0 10px;}
+
+/* ── TOUCH DEMO BAR ── */
+.touchbar{
+  display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
+  background:var(--c2);border:1px solid var(--b0);border-radius:12px;
+  padding:10px 12px;margin:0 0 12px;
+}
+.tbtn{
+  border:1.5px solid var(--b1);background:#fff;color:var(--text);
+  border-radius:10px;padding:8px 14px;font-size:.82rem;font-weight:600;
+  font-family:'Noto Sans SC',sans-serif;cursor:pointer;transition:all .2s;
+}
+.tbtn:hover{border-color:var(--green);background:var(--g3);}
+.tbtn:active{transform:translateY(1px);}
+.tbtn.main{border-color:var(--green);background:var(--g3);}
+
+/* ── COMPLETE ── */
+.cmpscr{display:none;text-align:center;padding:24px 14px 10px;animation:fdup .6s ease;}
+.cmpscr.show{display:block;}
+.cmpscr .cie{font-size:3rem;}
+.cmpscr h2{font-family:'ZCOOL KuaiLe',cursive;font-size:1.65rem;color:var(--gold);margin:8px 0 5px;}
+.cmpscr p{color:var(--dim);font-size:.84rem;margin-bottom:14px;}
+.cmpsum{background:var(--c2);border:1px solid var(--b0);border-radius:14px;padding:15px 20px;
+  font-size:.8rem;line-height:2.1;color:var(--dim);max-width:460px;margin:0 auto 18px;text-align:left;}
+.nbtn{padding:11px 36px;background:linear-gradient(135deg,#e8f4ed,var(--green));
+  border:none;border-radius:13px;color:#111;font-size:.94rem;font-weight:600;
+  cursor:pointer;font-family:'Noto Sans SC',sans-serif;box-shadow:0 4px 20px #1f8a4322;transition:all .3s;}
+.nbtn:hover{transform:translateY(-2px);box-shadow:0 7px 28px #1f8a4333;}
+
+/* ── PARTICLES ── */
+.ptcl{position:fixed;pointer-events:none;z-index:9999;animation:ptfly 1.9s ease forwards;font-size:1rem;}
+@keyframes ptfly{0%{opacity:1;transform:translateY(0) rotate(0deg);}100%{opacity:0;transform:translateY(-160px) rotate(560deg) scale(.2);}}
+
+/* ── LINE DRAW ANIM ── */
+@keyframes drawline{to{stroke-dashoffset:0;}}
+@keyframes crossdraw{to{stroke-dashoffset:0;}}
+
+@media (pointer:coarse){
+  .app{padding:12px 12px 64px;}
+  .pill{font-size:.86rem;padding:9px 16px;}
+  .pill .pn{width:24px;height:24px;font-size:.78rem;}
+  .scrhint,.touch-tip{font-size:.9rem;}
+  .touchbar{padding:12px;}
+  .tbtn{padding:11px 16px;font-size:.96rem;min-width:102px;}
+  .chipbank h4{font-size:.9rem;}
+  .chip{padding:11px 20px;min-width:82px;border-radius:12px;}
+  .chip .cv{font-size:1.24rem;}
+  .chip .cu{font-size:.74rem;}
+  .fb{font-size:1rem;min-height:54px;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <h1>🌿 能量流动思维导图</h1>
+  <p>拖动 / 点击数值卡片 → 填入空白节点 · 完成当前营养级后继续向右延伸</p>
+</header>
+
+<div class="pills" id="pills"></div>
+<div class="scrhint">← 左右滑动查看完整食物链 →</div>
+
+<div class="map-scroll" id="mapScroll">
+  <div class="map-stage" id="mapStage">
+    <div class="map-canvas" id="mapCanvas">
+      <svg id="msvg"></svg>
+    </div>
+  </div>
+</div>
+<div class="touch-tip" id="touchTip">触屏演示：单指拖动画布，双指缩放（当前 100%）</div>
+<div class="touchbar">
+  <button class="tbtn" type="button" onclick="panBy(-320)">← 左移</button>
+  <button class="tbtn main" type="button" onclick="focusActiveLevel()">定位当前营养级</button>
+  <button class="tbtn" type="button" onclick="panBy(320)">右移 →</button>
+  <button class="tbtn" type="button" onclick="goToStart()">回到起点</button>
+</div>
+
+<div class="chipbank" id="chipbank"></div>
+<div class="fb fbi" id="fb">👆 先点击下方数值卡片，再点击思维导图中的 <b>空白节点</b></div>
+<div class="fmls" id="fmls"></div>
+
+<div class="cmpscr" id="cmpscr">
+  <div class="cie">🎉</div>
+  <h2>思维导图完成！</h2>
+  <p>完整食物链的能量流动关系已全部分析清楚<br>能量沿食物链 <b style="color:var(--amber)">单向流动、逐级递减</b></p>
+  <div class="cmpsum">
+    <b style="color:var(--gold)">📋 核心关系式总结</b><br>
+    <b style="color:var(--text)">同化量</b> = <b style="color:var(--red)">呼吸散失</b> + <b style="color:var(--green)">生长发育繁殖</b><br>
+    <b style="color:var(--green)">生长发育繁殖</b> = <b style="color:var(--blue)">流入下一营养级</b> + <b style="color:var(--brown)">分解者</b> + <b style="color:var(--gray)">未被利用</b><br>
+    <b style="color:var(--text)">摄入量</b> = 同化量 + <b style="color:#d0c020">粪便（↑归上一营养级！）</b><br>
+    <b style="color:var(--amber)">营养级传递效率</b> = 10%（按同化量计算）
+  </div>
+  <button class="nbtn" onclick="restart()">↺ 重新挑战</button>
+</div>
+
+</div>
+<script>
+/* ══════════════════════════════════════════
+   CANVAS CONFIG
+══════════════════════════════════════════ */
+const CW = 1750, CH = 548;
+
+/* ══════════════════════════════════════════
+   NODE DATA  (cx,cy = center in canvas px)
+══════════════════════════════════════════ */
+const NODES = [
+  // ─── LEVEL 0 : 玉米 (生产者) ───────────────
+  {id:'g0',  lv:0, label:'同化量',         sub:'☀️固定太阳能', val:1000, type:'given',   cx:228, cy:84,  w:158, h:72},
+  {id:'R0',  lv:0, label:'呼吸散失',       sub:'热能·不可再利用', val:400,  type:'respire', cx:112, cy:214, w:130, h:63, par:'g0'},
+  {id:'W0',  lv:0, label:'生长发育繁殖',   sub:'',               val:600,  type:'growth',  cx:324, cy:214, w:136, h:63, par:'g0'},
+  {id:'U0',  lv:0, label:'未被利用',       sub:'暂时储存',       val:300,  type:'unused',  cx:160, cy:347, w:114, h:61, par:'W0'},
+  {id:'D0',  lv:0, label:'分解者利用',     sub:'枯枝落叶遗体',   val:180,  type:'decomp',  cx:316, cy:347, w:118, h:61, par:'W0'},
+  {id:'N0',  lv:0, label:'流入下一营养级', sub:'→ 鸡摄入量',     val:120,  type:'next',    cx:468, cy:347, w:124, h:61, par:'W0'},
+
+  // ─── LEVEL 1 : 鸡 (初级消费者) ────────────
+  {id:'g1',  lv:1, label:'摄入量',         sub:'来自玉米',        val:120, type:'given',   cx:756, cy:84,  w:152, h:72, crossFrom:'N0'},
+  {id:'F1',  lv:1, label:'粪便量',         sub:'⚠归上一营养级',  val:20,  type:'feces',   cx:614, cy:214, w:126, h:63, par:'g1', feces:true},
+  {id:'A1',  lv:1, label:'同化量',         sub:'摄入−粪便',       val:100, type:'assim',   cx:876, cy:214, w:124, h:63, par:'g1'},
+  {id:'H1',  lv:1, label:'呼吸散失',       sub:'热能',            val:60,  type:'respire', cx:754, cy:342, w:118, h:61, par:'A1'},
+  {id:'I1',  lv:1, label:'生长发育繁殖',   sub:'',                val:40,  type:'growth',  cx:978, cy:342, w:130, h:61, par:'A1'},
+  {id:'L1',  lv:1, label:'未被利用',       sub:'暂时储存',        val:10,  type:'unused',  cx:826, cy:470, w:110, h:59, par:'I1'},
+  {id:'K1',  lv:1, label:'分解者利用',     sub:'遗体残骸',        val:18,  type:'decomp',  cx:968, cy:470, w:114, h:59, par:'I1'},
+  {id:'J1',  lv:1, label:'流入下一营养级', sub:'→ 人摄入量',      val:12,  type:'next',    cx:1118,cy:470, w:122, h:59, par:'I1'},
+
+  // ─── LEVEL 2 : 人 (次级消费者) ───────────
+  {id:'g2',  lv:2, label:'摄入量',         sub:'来自鸡',          val:12, type:'given',   cx:1384,cy:84,  w:150, h:72, crossFrom:'J1'},
+  {id:'M2',  lv:2, label:'粪便量',         sub:'⚠归上一营养级',  val:2,  type:'feces',   cx:1246,cy:214, w:124, h:63, par:'g2', feces:true},
+  {id:'An2', lv:2, label:'同化量',         sub:'摄入−粪便',       val:10, type:'assim',   cx:1500,cy:214, w:124, h:63, par:'g2'},
+  {id:'O2',  lv:2, label:'呼吸散失',       sub:'热能',            val:6,  type:'respire', cx:1384,cy:342, w:118, h:61, par:'An2'},
+  {id:'P2',  lv:2, label:'生长发育繁殖',   sub:'',                val:4,  type:'growth',  cx:1574,cy:342, w:124, h:61, par:'An2'},
+  {id:'Q2',  lv:2, label:'分解者利用',     sub:'遗体残骸',        val:3,  type:'decomp',  cx:1490,cy:470, w:114, h:59, par:'P2'},
+  {id:'V2',  lv:2, label:'未被利用',       sub:'暂时储存',        val:1,  type:'unused',  cx:1648,cy:470, w:110, h:59, par:'P2'},
+];
+
+// Cross-level connections (big energy-flow arrows)
+const CROSS = [
+  {from:'N0', to:'g1', lv:1, label:'同化效率 10%', eff:'10%'},
+  {from:'J1', to:'g2', lv:2, label:'同化效率 10%', eff:'10%'},
+];
+
+// Per-level chip values
+const CHIPS = [
+  [400,600,120,180,300, 500,250,150],
+  [20,100,60,40,12,18,10, 80,30,25,15],
+  [2,10,6,4,3,1, 5,7,8],
+];
+
+// Organism info per level
+const LVINFO = [
+  {emoji:'🌽', name:'玉米', title:'第一营养级 · 生产者',   hint:'固定<b>太阳能</b>即为同化量',                  cx:228},
+  {emoji:'🐔', name:'鸡',   title:'第二营养级 · 初级消费者', hint:'摄入量 = 同化量 + 粪便',                     cx:756},
+  {emoji:'👤', name:'人',   title:'第三营养级 · 最高营养级', hint:'<b>最高营养级</b>，生长量→分解者+未利用',    cx:1384},
+];
+
+const FORMULAS = [
+  {title:'🌽 玉米 · 第一营养级', html:`
+    <b style="color:var(--gold)">1000</b> = 呼吸 <b style="color:var(--red)">400</b> + 生长 <b style="color:var(--green)">600</b> ✓<br>
+    生长 600 = 下一营养级 <b style="color:var(--blue)">120</b> + 分解者 <b style="color:var(--brown)">180</b> + 未利用 <b style="color:var(--gray)">300</b> ✓`},
+  {title:'🐔 鸡 · 第二营养级', html:`
+    同化量 = 摄入(120)−粪便(<b style="color:#ccc020">20</b>) = <b style="color:var(--green)">100</b> ✓&nbsp;&nbsp;
+    100 = 呼吸<b style="color:var(--red)">60</b>+生长<b style="color:var(--green)">40</b> ✓<br>
+    生长 40 = 下一营养级 <b style="color:var(--blue)">12</b> + 分解者 <b style="color:var(--brown)">18</b> + 未利用 <b style="color:var(--gray)">10</b> ✓`},
+  {title:'👤 人 · 第三营养级', html:`
+    同化量 = 摄入(12)−粪便(<b style="color:#ccc020">2</b>) = <b style="color:var(--green)">10</b> ✓&nbsp;&nbsp;
+    10 = 呼吸<b style="color:var(--red)">6</b>+生长<b style="color:var(--green)">4</b> ✓<br>
+    生长 4 = 分解者<b style="color:var(--brown)">3</b>+未利用<b style="color:var(--gray)">1</b> ✓ &nbsp;<b style="color:var(--amber)">⚠ 最高营养级，无下一营养级！</b>`},
+];
+
+const TCLS = {respire:'tr',growth:'tg',next:'tn',decomp:'td',unused:'tu',feces:'tf',assim:'ta'};
+const COLORS = {tr:'#cc3b3b',tg:'#1f8a43',tn:'#2f7ec6',td:'#9a6a2d',tu:'#6f7f6b',tf:'#b0aa18',ta:'#1a6f37'};
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let S = {
+  filled: {},       // id → val
+  activeLv: 0,
+  selChip: null,
+  selNode: null,
+  lvDone: [false,false,false],
+};
+let suppressNodeClickUntil = 0;
+const PAN = {active:false,pointerId:null,startX:0,startLeft:0,moved:false};
+const ZOOM = {
+  scale:1,
+  min:0.75,
+  max:2.2,
+  pinching:false,
+  pinchStartDist:0,
+  pinchStartScale:1,
+  pointers:new Map(),
+};
+
+function nd(id){ return NODES.find(n=>n.id===id); }
+function isGiven(id){ const n=nd(id); return n&&n.type==='given'; }
+function isFilled(id){ return S.filled[id]!==undefined; }
+function isLocked(lv){ return lv > S.activeLv; }
+function isBlankNode(id){ return !isGiven(id)&&!isFilled(id); }
+function lvNodes(lv){ return NODES.filter(n=>n.lv===lv&&n.type!=='given'); }
+function isUsed(lv,val){
+  const need = CHIPS[lv].filter((v,i,a)=>a.indexOf(v)===i&&v===val).length > 0 ?
+    NODES.filter(n=>n.lv===lv&&n.val===val&&n.type!=='given').length : 0;
+  const placed = Object.entries(S.filled).filter(([id,v])=>v===val&&nd(id)?.lv===lv).length;
+  return placed >= need;
+}
+function lvAllFilled(lv){ return NODES.filter(n=>n.lv===lv&&n.type!=='given').every(n=>S.filled[n.id]!==undefined); }
+
+/* ══════════════════════════════════════════
+   BUILD DOM NODES (once)
+══════════════════════════════════════════ */
+function buildCanvas(){
+  const canvas = document.getElementById('mapCanvas');
+
+  // Level badges
+  LVINFO.forEach((li,i)=>{
+    const b = document.createElement('div');
+    b.className = 'lvlbadge';
+    b.id = 'badge-'+i;
+    b.style.left = li.cx+'px';
+    b.style.top = '10px';
+    b.innerHTML = `<span class="lbe">${li.emoji}</span><span>${li.title}</span><span class="lbcheck">✓</span>`;
+    canvas.appendChild(b);
+  });
+
+  // Nodes
+  NODES.forEach(n=>{
+    const el = document.createElement('div');
+    el.id = 'nd-'+n.id;
+    el.style.left = (n.cx - n.w/2)+'px';
+    el.style.top  = (n.cy - n.h/2)+'px';
+    el.style.width  = n.w+'px';
+    el.style.height = n.h+'px';
+    el.className = 'nd';
+
+    // drag
+    el.addEventListener('dragover',  e=>{ e.preventDefault(); onDragOver(n.id); });
+    el.addEventListener('dragleave', e=>{ onDragLeave(n.id); });
+    el.addEventListener('drop',      e=>{ e.preventDefault(); const v=parseInt(e.dataTransfer.getData('text')); if(!isNaN(v)) tryPlace(n.id,v); });
+    el.addEventListener('click', ()=>onNodeClick(n.id));
+    canvas.appendChild(el);
+  });
+
+  updateAllNodes();
+  buildSvg();
+  updateBadges();
+}
+
+/* ══════════════════════════════════════════
+   UPDATE NODE APPEARANCE
+══════════════════════════════════════════ */
+function updateNode(id, animate){
+  const n = nd(id);
+  const el = document.getElementById('nd-'+n.id);
+  if(!el) return;
+
+  const locked = isLocked(n.lv);
+  const filled = isFilled(id);
+  const given  = n.type==='given';
+
+  // Class
+  let cls = 'nd';
+  if(given)        cls += ' given';
+  else if(filled)  cls += ' filled '+(TCLS[n.type]||'');
+  else             cls += ' blank'+(S.selNode===id?' chosen':'');
+
+  if(locked && !given) cls += ' locked-nd';
+
+  el.className = cls + (animate?' pop':'');
+
+  // Content
+  const val = filled ? S.filled[id] : given ? n.val : '？';
+  const unit= (filled||given) ? 'kJ' : '';
+  const badge = n.feces && filled ? '<div class="fbadge">归上一营养级</div>' : '';
+
+  el.innerHTML = `${badge}
+    <div class="ni">${n.type==='given' ? (n.lv===0?'☀️':'🍽️') : {respire:'🔥',growth:'🌱',next:'➡️',decomp:'🍄',unused:'💤',feces:'⚠️',assim:'✓'}[n.type]||''}</div>
+    <div class="nl">${n.label}</div>
+    ${n.sub?`<div class="ns">${n.sub}</div>`:''}
+    <div class="nv">${val}${unit?`<span class="nu">${unit}</span>`:''}</div>`;
+
+  if(animate) setTimeout(()=>el.classList.remove('pop'),500);
+}
+
+function updateAllNodes(){
+  NODES.forEach(n=>updateNode(n.id,false));
+}
+
+/* ══════════════════════════════════════════
+   SVG LINES
+══════════════════════════════════════════ */
+function buildSvg(){
+  const svg = document.getElementById('msvg');
+  // Build defs
+  const allColors = Object.values(COLORS).concat(['#1f8a43','#a3a3a3','#2f7ec6cc']);
+  const defs = allColors.map((c,i)=>`
+    <marker id="mk${i}" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <path d="M0,0 L7,3.5 L0,7 Z" fill="${c}99"/>
+    </marker>`).join('');
+  svg.innerHTML = `<defs>
+    ${defs}
+    <marker id="mkgray" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#a3a3a399"/>
+    </marker>
+    <marker id="mkcross" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#2f7ec6cc"/>
+    </marker>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>`;
+
+  // Within-level connections
+  NODES.forEach(n=>{
+    if(!n.par) return;
+    const p = nd(n.par), c = n;
+    const x1 = p.cx, y1 = p.cy + p.h/2;
+    const x2 = c.cx, y2 = c.cy - c.h/2;
+    const my = (y1+y2)/2;
+
+    const filled  = isFilled(n.id);
+    const locked  = isLocked(n.lv);
+    const tcls    = TCLS[n.type]||'';
+    const colIdx  = Object.keys(COLORS).indexOf(tcls);
+    const col     = COLORS[tcls]||'#1f8a43';
+    const stroke  = locked ? '#a8a8a855' : filled ? col+'aa' : '#a8a8a899';
+    const sw      = filled ? '2.5' : '2';
+    const dash    = filled ? 'none' : '5,4';
+    const marker  = locked ? 'url(#mkgray)' : filled ? `url(#mk${colIdx>=0?colIdx:0})` : 'url(#mkgray)';
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.id = 'line-'+n.id;
+    path.setAttribute('d',`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`);
+    path.setAttribute('stroke',stroke);
+    path.setAttribute('stroke-width',sw);
+    path.setAttribute('fill','none');
+    if(dash!=='none') path.setAttribute('stroke-dasharray',dash);
+    path.setAttribute('marker-end',marker);
+    svg.appendChild(path);
+  });
+
+  // Cross-level arrows
+  CROSS.forEach(cr=>{
+    const fn = nd(cr.from), tn2 = nd(cr.to);
+    if(!fn||!tn2) return;
+    // Exit from right side of fn, enter left side of tn2
+    const x1 = fn.cx + fn.w/2, y1 = fn.cy;
+    const x2 = tn2.cx - tn2.w/2, y2 = tn2.cy;
+    const mx1 = x1 + (x2-x1)*0.45, mx2 = x2 - (x2-x1)*0.2;
+
+    const locked = isLocked(cr.lv);
+    const stroke = locked ? '#b8b8b833' : '#2f7ec6aa';
+    const sw = locked ? '2' : '3.5';
+    const dash = locked ? '6,5' : 'none';
+
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.id = 'cross-'+cr.from;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${x1},${y1} C${mx1},${y1} ${mx2},${y2} ${x2},${y2}`);
+    path.setAttribute('stroke',stroke);
+    path.setAttribute('stroke-width',sw);
+    path.setAttribute('fill','none');
+    if(dash!=='none') path.setAttribute('stroke-dasharray',dash);
+    if(!locked) {
+      path.setAttribute('marker-end','url(#mkcross)');
+      path.setAttribute('filter','url(#glow)');
+    }
+    g.appendChild(path);
+
+    // Energy label on path
+    if(!locked){
+      const mx = (x1+x2)/2, my = (y1+y2)/2 - 12;
+      const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      rect.setAttribute('x',mx-34); rect.setAttribute('y',my-11);
+      rect.setAttribute('width','68'); rect.setAttribute('height','22');
+      rect.setAttribute('rx','7'); rect.setAttribute('fill','#ffffffee');
+      rect.setAttribute('stroke','#2f7ec655'); rect.setAttribute('stroke-width','1');
+      g.appendChild(rect);
+
+      const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+      txt.setAttribute('x',mx); txt.setAttribute('y',my+4.5);
+      txt.setAttribute('text-anchor','middle');
+      txt.setAttribute('fill','#2f7ec6cc');
+      txt.setAttribute('font-size','10');
+      txt.setAttribute('font-family','Noto Sans SC,sans-serif');
+      txt.textContent = cr.label;
+      g.appendChild(txt);
+    }
+    svg.appendChild(g);
+  });
+}
+
+function updateLine(nodeId){
+  const n = nd(nodeId);
+  const el = document.getElementById('line-'+nodeId);
+  if(!el) return;
+
+  const filled = isFilled(nodeId);
+  const locked = isLocked(n.lv);
+  const tcls   = TCLS[n.type]||'';
+  const colIdx = Object.keys(COLORS).indexOf(tcls);
+  const col    = COLORS[tcls]||'#1f8a43';
+
+  if(filled && !locked){
+    const len = el.getTotalLength ? el.getTotalLength() : 200;
+    el.setAttribute('stroke', col+'aa');
+    el.setAttribute('stroke-width','2.5');
+    el.removeAttribute('stroke-dasharray');
+    el.setAttribute('marker-end',`url(#mk${colIdx>=0?colIdx:0})`);
+    el.style.strokeDasharray = len;
+    el.style.strokeDashoffset = len;
+    el.style.animation = 'drawline .55s ease forwards';
+    setTimeout(()=>{ el.style.animation=''; el.style.strokeDasharray=''; el.style.strokeDashoffset=''; },700);
+  }
+}
+
+function unlockCrossArrow(fromId){
+  // Rebuild the cross group
+  const cr = CROSS.find(c=>c.from===fromId);
+  if(!cr) return;
+  const old = document.getElementById('cross-'+fromId);
+  if(old) old.remove();
+
+  const fn = nd(cr.from), tn2 = nd(cr.to);
+  const x1 = fn.cx + fn.w/2, y1 = fn.cy;
+  const x2 = tn2.cx - tn2.w/2, y2 = tn2.cy;
+  const mx1 = x1 + (x2-x1)*0.45, mx2 = x2 - (x2-x1)*0.2;
+
+  const svg = document.getElementById('msvg');
+  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.id = 'cross-'+fromId;
+
+  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  const pathD = `M${x1},${y1} C${mx1},${y1} ${mx2},${y2} ${x2},${y2}`;
+  path.setAttribute('d',pathD);
+  path.setAttribute('stroke','#2f7ec6aa');
+  path.setAttribute('stroke-width','3.5');
+  path.setAttribute('fill','none');
+  path.setAttribute('marker-end','url(#mkcross)');
+  path.setAttribute('filter','url(#glow)');
+
+  // Animate draw
+  const approxLen = Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2)) * 1.3;
+  path.style.strokeDasharray = approxLen;
+  path.style.strokeDashoffset = approxLen;
+  path.style.animation = 'crossdraw .9s .1s ease forwards';
+  setTimeout(()=>{ path.style.animation=''; path.style.strokeDasharray=''; path.style.strokeDashoffset=''; }, 1100);
+  g.appendChild(path);
+
+  const mx = (x1+x2)/2, my = (y1+y2)/2 - 12;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  rect.setAttribute('x',mx-34); rect.setAttribute('y',my-11);
+  rect.setAttribute('width','68'); rect.setAttribute('height','22');
+  rect.setAttribute('rx','7'); rect.setAttribute('fill','#ffffffee');
+  rect.setAttribute('stroke','#2f7ec655'); rect.setAttribute('stroke-width','1');
+  g.appendChild(rect);
+
+  const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+  txt.setAttribute('x',mx); txt.setAttribute('y',my+4.5);
+  txt.setAttribute('text-anchor','middle');
+  txt.setAttribute('fill','#2f7ec6cc');
+  txt.setAttribute('font-size','10');
+  txt.setAttribute('font-family','Noto Sans SC,sans-serif');
+  txt.textContent = cr.label;
+  g.appendChild(txt);
+  svg.appendChild(g);
+}
+
+/* ══════════════════════════════════════════
+   BADGES
+══════════════════════════════════════════ */
+function updateBadges(){
+  LVINFO.forEach((_,i)=>{
+    const b=document.getElementById('badge-'+i);
+    if(!b) return;
+    b.classList.remove('active','done','locked');
+    if(S.lvDone[i])        b.classList.add('done');
+    else if(i===S.activeLv) b.classList.add('active');
+    else if(i>S.activeLv)  b.classList.add('locked');
+  });
+}
+
+/* ══════════════════════════════════════════
+   TOUCH NAV / PAN
+══════════════════════════════════════════ */
+function mapScrollEl(){ return document.getElementById('mapScroll'); }
+function mapStageEl(){ return document.getElementById('mapStage'); }
+function mapCanvasEl(){ return document.getElementById('mapCanvas'); }
+
+function clampScrollLeft(left){
+  const s = mapScrollEl();
+  if(!s) return 0;
+  const max = Math.max(0, s.scrollWidth - s.clientWidth);
+  return Math.max(0, Math.min(left, max));
+}
+
+function updateTouchTip(){
+  const tip = document.getElementById('touchTip');
+  if(!tip) return;
+  const pct = Math.round(ZOOM.scale * 100);
+  const isTouch = window.matchMedia('(pointer:coarse)').matches || navigator.maxTouchPoints > 0;
+  tip.textContent = isTouch
+    ? `触屏演示：单指拖动画布，双指缩放（当前 ${pct}%）`
+    : `演示移动：滚轮/触控板或下方按钮移动；触控可双指缩放（当前 ${pct}%）`;
+}
+
+function setMapScale(nextScale, anchorX, anchorY){
+  const scroll = mapScrollEl();
+  const stage = mapStageEl();
+  const canvas = mapCanvasEl();
+  if(!scroll || !stage || !canvas) return;
+
+  const prev = ZOOM.scale;
+  const scale = Math.max(ZOOM.min, Math.min(nextScale, ZOOM.max));
+
+  if(Math.abs(scale - prev) < 0.0001){
+    updateTouchTip();
+    return;
+  }
+
+  const rect = scroll.getBoundingClientRect();
+  const clientX = anchorX ?? (rect.left + rect.width * 0.5);
+  const clientY = anchorY ?? (rect.top + rect.height * 0.5);
+  const localX = clientX - rect.left;
+  const localY = clientY - rect.top;
+  const worldX = (scroll.scrollLeft + localX) / prev;
+  const worldY = (scroll.scrollTop + localY) / prev;
+
+  ZOOM.scale = scale;
+  stage.style.width = `${CW * scale}px`;
+  stage.style.height = `${CH * scale}px`;
+  canvas.style.transform = `scale(${scale})`;
+
+  scroll.scrollLeft = clampScrollLeft(worldX * scale - localX);
+  const maxY = Math.max(0, scroll.scrollHeight - scroll.clientHeight);
+  scroll.scrollTop = Math.max(0, Math.min(worldY * scale - localY, maxY));
+  updateTouchTip();
+}
+
+function pointersDistance(){
+  const pts = [...ZOOM.pointers.values()];
+  if(pts.length < 2) return 0;
+  const dx = pts[0].x - pts[1].x;
+  const dy = pts[0].y - pts[1].y;
+  return Math.hypot(dx, dy);
+}
+
+function pointersMidpoint(){
+  const pts = [...ZOOM.pointers.values()];
+  if(pts.length < 2) return {x:0,y:0};
+  return {x:(pts[0].x + pts[1].x) * 0.5, y:(pts[0].y + pts[1].y) * 0.5};
+}
+
+function panBy(delta){
+  const s = mapScrollEl();
+  if(!s) return;
+  s.scrollTo({left: clampScrollLeft(s.scrollLeft + delta), behavior:'smooth'});
+}
+function goToStart(){
+  const s = mapScrollEl();
+  if(!s) return;
+  s.scrollTo({left:0,behavior:'smooth'});
+}
+function focusActiveLevel(){
+  const s = mapScrollEl();
+  if(!s) return;
+  const target = LVINFO[S.activeLv].cx * ZOOM.scale - s.clientWidth * 0.5;
+  s.scrollTo({left: clampScrollLeft(target), behavior:'smooth'});
+}
+function initTouchPan(){
+  const scroll = mapScrollEl();
+  if(!scroll) return;
+
+  scroll.style.touchAction = 'none';
+  updateTouchTip();
+
+  scroll.addEventListener('pointerdown', (e)=>{
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+
+    ZOOM.pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(scroll.setPointerCapture) scroll.setPointerCapture(e.pointerId);
+
+    if(ZOOM.pointers.size >= 2){
+      PAN.active = false;
+      ZOOM.pinching = true;
+      ZOOM.pinchStartDist = pointersDistance();
+      ZOOM.pinchStartScale = ZOOM.scale;
+      return;
+    }
+
+    PAN.active = true;
+    PAN.pointerId = e.pointerId;
+    PAN.startX = e.clientX;
+    PAN.startLeft = scroll.scrollLeft;
+    PAN.moved = false;
+  });
+
+  scroll.addEventListener('pointermove', (e)=>{
+    if(ZOOM.pointers.has(e.pointerId)){
+      ZOOM.pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    }
+
+    if(ZOOM.pointers.size >= 2){
+      if(!ZOOM.pinching){
+        ZOOM.pinching = true;
+        ZOOM.pinchStartDist = pointersDistance();
+        ZOOM.pinchStartScale = ZOOM.scale;
+      }
+      const dist = pointersDistance();
+      if(ZOOM.pinchStartDist > 0 && dist > 0){
+        const ratio = dist / ZOOM.pinchStartDist;
+        const mid = pointersMidpoint();
+        setMapScale(ZOOM.pinchStartScale * ratio, mid.x, mid.y);
+      }
+      PAN.active = false;
+      e.preventDefault();
+      return;
+    }
+
+    if(!PAN.active || e.pointerId !== PAN.pointerId) return;
+    const dx = e.clientX - PAN.startX;
+    if(Math.abs(dx) > 6) PAN.moved = true;
+    if(PAN.moved){
+      scroll.scrollLeft = clampScrollLeft(PAN.startLeft - dx);
+      e.preventDefault();
+    }
+  }, {passive:false});
+
+  const endPan = (e)=>{
+    if(PAN.active && e.pointerId === PAN.pointerId){
+      if(PAN.moved) suppressNodeClickUntil = Date.now() + 260;
+      PAN.active = false;
+      PAN.pointerId = null;
+      PAN.moved = false;
+    }
+
+    if(ZOOM.pointers.has(e.pointerId)){
+      ZOOM.pointers.delete(e.pointerId);
+    }
+
+    if(ZOOM.pinching && ZOOM.pointers.size < 2){
+      ZOOM.pinching = false;
+      suppressNodeClickUntil = Date.now() + 260;
+    }
+
+    if(!ZOOM.pinching && ZOOM.pointers.size === 1){
+      const [id, pt] = [...ZOOM.pointers.entries()][0];
+      PAN.active = true;
+      PAN.pointerId = id;
+      PAN.startX = pt.x;
+      PAN.startLeft = scroll.scrollLeft;
+      PAN.moved = false;
+    }
+  };
+
+  scroll.addEventListener('pointerup', endPan);
+  scroll.addEventListener('pointercancel', endPan);
+  scroll.addEventListener('lostpointercapture', endPan);
+}
+
+/* ══════════════════════════════════════════
+   PILLS
+══════════════════════════════════════════ */
+function renderPills(){
+  document.getElementById('pills').innerHTML = LVINFO.map((li,i)=>{
+    const cls='pill'+(i===S.activeLv&&!S.lvDone[i]?' active':S.lvDone[i]?' done':'');
+    return `<div class="${cls}"><div class="pn">${S.lvDone[i]?'✓':i+1}</div><span>${li.emoji} ${li.title.split('·')[0].trim()}</span></div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════
+   CHIP BANK
+══════════════════════════════════════════ */
+function renderChips(){
+  const bank = document.getElementById('chipbank');
+  if(S.lvDone.every(d=>d)){ bank.innerHTML=`<div class="no-chips">🎉 全部营养级已完成！</div>`; return; }
+  const lv = S.activeLv;
+  const uniq = [...new Set(CHIPS[lv])];
+  bank.innerHTML = `
+    <h4>📦 数值卡片 · ${LVINFO[lv].emoji} ${LVINFO[lv].title}  — 拖动 或 点击选择后点节点</h4>
+    <div class="chiprow">${uniq.map(v=>`
+      <div class="chip${isUsed(lv,v)?' used':''}${S.selChip===v?' sel':''}"
+        id="ck-${v}" draggable="${!isUsed(lv,v)}"
+        onclick="onChipClick(${v})"
+        ondragstart="onDragStart(event,${v})"
+        ondragend="onDragEnd(event,${v})">
+        <span class="cv">${v}</span><span class="cu">kJ</span>
+      </div>`).join('')}</div>`;
+}
+
+/* ══════════════════════════════════════════
+   INTERACTIONS
+══════════════════════════════════════════ */
+function onChipClick(v){
+  if(isUsed(S.activeLv,v)) return;
+  if(S.selNode){ tryPlace(S.selNode,v); return; }
+  S.selChip = (S.selChip===v) ? null : v;
+  S.selNode = null;
+  // Highlight all hot blanks
+  NODES.filter(n=>n.lv===S.activeLv&&isBlankNode(n.id)).forEach(n=>{
+    const el=document.getElementById('nd-'+n.id);
+    if(el){ el.classList.toggle('hot', S.selChip!==null); }
+  });
+  setFB(S.selChip!==null
+    ? `已选择 <b style="color:var(--amber)">${v} kJ</b> — 点击思维导图中的空白节点填入`
+    : '👆 点击数值卡片选择，再点击空白节点', 'fbi');
+  renderChips();
+}
+
+function onNodeClick(id){
+  if(Date.now() < suppressNodeClickUntil) return;
+  const n = nd(id);
+  if(!n || n.type==='given' || isLocked(n.lv) || isFilled(id)) return;
+  if(S.selChip!==null){ tryPlace(id,S.selChip); return; }
+  S.selNode = (S.selNode===id) ? null : id;
+  S.selChip = null;
+  // clear hot
+  NODES.forEach(n=>{ const el=document.getElementById('nd-'+n.id); if(el) el.classList.remove('hot'); });
+  // update chosen
+  NODES.filter(n=>n.lv===S.activeLv&&isBlankNode(n.id)).forEach(n2=>{
+    const el=document.getElementById('nd-'+n2.id);
+    if(el){ el.classList.toggle('chosen', n2.id===S.selNode); }
+  });
+  setFB(S.selNode
+    ? `已选中：<b style="color:var(--gold)">${n.label}</b> — 现在点击数值卡片`
+    : '👆 点击空白节点后，再选择数值','fbi');
+}
+
+let dragVal=null;
+function onDragStart(e,v){ dragVal=v; e.dataTransfer.setData('text',String(v)); setTimeout(()=>{ const el=document.getElementById('ck-'+v); if(el) el.classList.add('drag'); },0); }
+function onDragEnd(e,v){ const el=document.getElementById('ck-'+v); if(el) el.classList.remove('drag'); dragVal=null; }
+function onDragOver(id){ if(!isBlankNode(id)||isLocked(nd(id)?.lv)) return; const el=document.getElementById('nd-'+id); if(el) el.classList.add('hot'); }
+function onDragLeave(id){ const el=document.getElementById('nd-'+id); if(el) el.classList.remove('hot'); }
+
+/* ══════════════════════════════════════════
+   TRY PLACE
+══════════════════════════════════════════ */
+function tryPlace(nodeId, chipVal){
+  const n=nd(nodeId);
+  if(!n||n.type==='given'||isFilled(nodeId)||isLocked(n.lv)) return;
+  S.selChip=null; S.selNode=null;
+
+  // clear all hot/chosen
+  NODES.forEach(n=>{ const el=document.getElementById('nd-'+n.id); if(el){el.classList.remove('hot','chosen');} });
+
+  if(chipVal===n.val){
+    S.filled[nodeId]=chipVal;
+    updateNode(nodeId,true);
+    updateLine(nodeId);
+    renderChips();
+    setFB(`✅ 正确！「${n.label}」= <b>${chipVal} kJ</b>`,'fbok');
+    if(lvAllFilled(S.activeLv)) setTimeout(()=>completeLevel(S.activeLv), 300);
+  } else {
+    setFB(`❌ 「${n.label}」不是 ${chipVal} kJ，再思考一下各分支间的数量关系`,'fber');
+    const el=document.getElementById('nd-'+nodeId);
+    if(el){ el.classList.add('shake'); setTimeout(()=>el.classList.remove('shake'),460); }
+    renderChips();
+  }
+}
+
+/* ══════════════════════════════════════════
+   LEVEL COMPLETE
+══════════════════════════════════════════ */
+function completeLevel(lv){
+  S.lvDone[lv]=true;
+  spawnParts(12);
+  setFB(`🎉 ${LVINFO[lv].emoji} ${LVINFO[lv].title} 完成！能量关系全部正确！`,'fbdn');
+
+  // Show formula
+  showFormula(lv);
+
+  if(lv < LVINFO.length-1){
+    // Unlock next level after delay
+    setTimeout(()=>{
+      S.activeLv = lv+1;
+
+      // Unlock nodes of next level
+      const nextNodes = NODES.filter(n=>n.lv===S.activeLv);
+      nextNodes.forEach((n,i)=>{
+        setTimeout(()=>{
+          const el=document.getElementById('nd-'+n.id);
+          if(el){ el.classList.add('unlocking'); setTimeout(()=>el.classList.remove('unlocking'),700); }
+          updateNode(n.id,false);
+        }, i*60);
+      });
+
+      // Unlock cross arrow
+      const crossNode = NODES.find(n=>n.lv===lv&&n.type==='next');
+      if(crossNode) unlockCrossArrow(crossNode.id);
+
+      // Scroll to show next level
+      setTimeout(()=>{
+        focusActiveLevel();
+      }, 400);
+
+      updateBadges();
+      renderPills();
+      renderChips();
+      setFB(`🔓 ${LVINFO[S.activeLv].emoji} ${LVINFO[S.activeLv].title} 已解锁！继续分析能量流动`,'fbok');
+    }, 1200);
+  } else {
+    // All done
+    setTimeout(()=>{
+      updateBadges(); renderPills();
+      document.getElementById('cmpscr').classList.add('show');
+      spawnParts(24);
+    }, 1000);
+  }
+  updateBadges(); renderPills();
+}
+
+/* ══════════════════════════════════════════
+   FORMULA PANELS
+══════════════════════════════════════════ */
+function showFormula(lv){
+  const container=document.getElementById('fmls');
+  const f=FORMULAS[lv];
+  const div=document.createElement('div');
+  div.className='fmlpanel show';
+  div.innerHTML=`<div class="fmh">✓ ${f.title} · 验证</div>${f.html}`;
+  container.appendChild(div);
+}
+
+/* ══════════════════════════════════════════
+   FEEDBACK
+══════════════════════════════════════════ */
+function setFB(msg,cls){
+  const el=document.getElementById('fb');
+  if(el){el.className=`fb ${cls}`;el.innerHTML=msg;}
+}
+
+/* ══════════════════════════════════════════
+   PARTICLES
+══════════════════════════════════════════ */
+function spawnParts(n){
+  const pool=['✨','🌟','🎉','🌿','💚','⭐','⚡','🌱'];
+  for(let i=0;i<n;i++) setTimeout(()=>{
+    const el=document.createElement('div');
+    el.className='ptcl';
+    el.style.left=(8+Math.random()*84)+'vw';
+    el.style.top=(10+Math.random()*72)+'vh';
+    el.textContent=pool[Math.floor(Math.random()*pool.length)];
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),2100);
+  },i*80);
+}
+
+/* ══════════════════════════════════════════
+   RESTART
+══════════════════════════════════════════ */
+function restart(){
+  S={filled:{},activeLv:0,selChip:null,selNode:null,lvDone:[false,false,false]};
+  document.getElementById('cmpscr').classList.remove('show');
+  document.getElementById('fmls').innerHTML='';
+  document.getElementById('mapCanvas').innerHTML='<svg id="msvg"></svg>';
+  buildCanvas();
+  renderPills();
+  renderChips();
+  setFB('👆 先点击下方数值卡片，再点击思维导图中的 <b>空白节点</b>','fbi');
+  setMapScale(1);
+  goToStart();
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+const styleEl=document.createElement('style');
+styleEl.textContent='@keyframes drawline{to{stroke-dashoffset:0;}}@keyframes crossdraw{to{stroke-dashoffset:0;}}';
+document.head.appendChild(styleEl);
+
+buildCanvas();
+renderPills();
+renderChips();
+setMapScale(1);
+initTouchPan();
+</script>
+</body>
 </html>
